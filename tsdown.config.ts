@@ -5,6 +5,7 @@ export default defineConfig({
   format: ["esm", "cjs"],
   dts: true,
   clean: true,
+  hash: false,
   outDir: "dist",
   target: "node18",
   platform: "node",
