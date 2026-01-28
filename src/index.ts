@@ -10,3 +10,6 @@ export { Runner } from "./runner";
 
 export type { DequeuedJob, DequeuedJobError } from "./types";
 export { RetryAfterError } from "./types";
+
+export { tasksTable } from "./schema";
+export type { Job } from "./schema";
