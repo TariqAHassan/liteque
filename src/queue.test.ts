@@ -254,7 +254,7 @@ describe("SqliteQueue", () => {
     // Make one job running and one failed
     const dequeuedJob = await queue.attemptDequeue({ timeoutSecs: 30 });
     expect(dequeuedJob).not.toBeNull();
-    await queue.finalize(dequeuedJob!.id, dequeuedJob!.allocationId, "failed");
+    queue.finalize(dequeuedJob!.id, dequeuedJob!.allocationId, "failed");
 
     expect(await queue.stats()).toEqual({
       pending: 2,
@@ -404,7 +404,7 @@ describe("SqliteQueue", () => {
     // Dequeue and mark as pending_retry
     const dequeuedJob = await queue.attemptDequeue({ timeoutSecs: 30 });
     expect(dequeuedJob).not.toBeNull();
-    await queue.finalize(
+    queue.finalize(
       dequeuedJob!.id,
       dequeuedJob!.allocationId,
       "pending_retry",
@@ -514,7 +514,7 @@ describe("SqliteQueue", () => {
     expect(dequeuedJob!.numRunsLeft).toBe(1);
 
     // Mark as pending_retry without refund - should consume one retry
-    await queue.finalize(
+    queue.finalize(
       dequeuedJob!.id,
       dequeuedJob!.allocationId,
       "pending_retry",
@@ -528,7 +528,7 @@ describe("SqliteQueue", () => {
     expect(dequeuedJob2!.numRunsLeft).toBe(0); // One retry consumed
 
     // Mark as pending_retry WITH refund - should NOT consume a retry
-    await queue.finalize(
+    queue.finalize(
       dequeuedJob2!.id,
       dequeuedJob2!.allocationId,
       "pending_retry",
@@ -542,7 +542,7 @@ describe("SqliteQueue", () => {
     expect(dequeuedJob3!.numRunsLeft).toBe(0); // Same as before, retry was refunded
 
     // Complete the job
-    await queue.finalize(
+    queue.finalize(
       dequeuedJob3!.id,
       dequeuedJob3!.allocationId,
       "completed",

@@ -92,8 +92,8 @@ export class Runner<T, R = void> {
           runNumber,
           numRetriesLeft: job.numRunsLeft,
         })
-        .catch(() => {});
-      await this.queue.finalize(
+        .catch(() => { });
+      this.queue.finalize(
         job.id,
         job.allocationId,
         job.numRunsLeft <= 0 ? "failed" : "pending_retry",
@@ -120,11 +120,11 @@ export class Runner<T, R = void> {
         ),
       ]);
       await this.funcs.onComplete?.(dequeuedJob, result);
-      await this.queue.finalize(job.id, job.allocationId, "completed");
+      this.queue.finalize(job.id, job.allocationId, "completed");
     } catch (e) {
       if (e instanceof RetryAfterError) {
         // Re-enqueue without consuming a retry attempt.
-        await this.queue.finalize(
+        this.queue.finalize(
           job.id,
           job.allocationId,
           "pending_retry",
@@ -140,8 +140,8 @@ export class Runner<T, R = void> {
           runNumber,
           numRetriesLeft: job.numRunsLeft,
         })
-        .catch(() => {});
-      await this.queue.finalize(
+        .catch(() => { });
+      this.queue.finalize(
         job.id,
         job.allocationId,
         job.numRunsLeft <= 0 ? "failed" : "pending_retry",

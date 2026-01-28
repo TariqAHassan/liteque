@@ -83,9 +83,9 @@ export class SqliteQueue<T> {
     );
   }
 
-  async attemptDequeue(options: { timeoutSecs: number }): Promise<Job | null> {
-    return await this.db.transaction(async (txn) => {
-      const jobs = await txn
+  attemptDequeue(options: { timeoutSecs: number }): Job | null {
+    return this.db.transaction((txn) => {
+      const jobs = txn
         .select()
         .from(tasksTable)
         .where(
@@ -111,7 +111,8 @@ export class SqliteQueue<T> {
           ),
         )
         .orderBy(asc(tasksTable.priority), asc(tasksTable.createdAt))
-        .limit(1);
+        .limit(1)
+        .all();
 
       if (jobs.length === 0) {
         return null;
@@ -121,11 +122,11 @@ export class SqliteQueue<T> {
 
       if (job.numRunsLeft === 0) {
         // Picked up an expired job
-        await this.finalize(job.id, job.allocationId, "failed");
+        this.finalize(job.id, job.allocationId, "failed");
         return null;
       }
 
-      const result = await txn
+      const result = txn
         .update(tasksTable)
         .set({
           status: "running",
@@ -141,7 +142,8 @@ export class SqliteQueue<T> {
             eq(tasksTable.allocationId, job.allocationId),
           ),
         )
-        .returning();
+        .returning()
+        .all();
       if (result.length === 0) {
         return null;
       }
@@ -150,7 +152,7 @@ export class SqliteQueue<T> {
     });
   }
 
-  async finalize(
+  finalize(
     id: number,
     alloctionId: string,
     status: "completed" | "pending_retry" | "failed",
@@ -161,13 +163,14 @@ export class SqliteQueue<T> {
       status === "completed" ||
       (status === "failed" && !this.options.keepFailedJobs)
     ) {
-      await this.db
+      this.db
         .delete(tasksTable)
         .where(
           and(eq(tasksTable.id, id), eq(tasksTable.allocationId, alloctionId)),
-        );
+        )
+        .run();
     } else {
-      await this.db
+      this.db
         .update(tasksTable)
         .set({
           status: status,
@@ -179,7 +182,8 @@ export class SqliteQueue<T> {
         })
         .where(
           and(eq(tasksTable.id, id), eq(tasksTable.allocationId, alloctionId)),
-        );
+        )
+        .run();
     }
   }
 
